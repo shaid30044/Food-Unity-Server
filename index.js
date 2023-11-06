@@ -45,6 +45,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/foodRequest", async (req, res) => {
+      const cursor = foodRequestCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post("/foodRequest", async (req, res) => {
       const requestFood = req.body;
       console.log(requestFood);
