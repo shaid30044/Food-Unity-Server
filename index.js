@@ -38,6 +38,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/foodRequest/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodRequestCollection.findOne(query);
+      res.send(result);
+    });
+
     app.post("/foods", async (req, res) => {
       const newFood = req.body;
       console.log(newFood);
@@ -55,6 +62,13 @@ async function run() {
       const requestFood = req.body;
       console.log(requestFood);
       const result = await foodRequestCollection.insertOne(requestFood);
+      res.send(result);
+    });
+
+    app.delete("/foodRequest/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodRequestCollection.deleteOne(query);
       res.send(result);
     });
 
