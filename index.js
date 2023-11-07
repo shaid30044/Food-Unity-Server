@@ -40,6 +40,7 @@ async function run() {
 
     app.get("/foodRequest/:id", async (req, res) => {
       const id = req.params.id;
+      console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await foodRequestCollection.findOne(query);
       res.send(result);
@@ -62,6 +63,13 @@ async function run() {
       const requestFood = req.body;
       console.log(requestFood);
       const result = await foodRequestCollection.insertOne(requestFood);
+      res.send(result);
+    });
+
+    app.delete("/foods/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCollection.deleteOne(query);
       res.send(result);
     });
 
