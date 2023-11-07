@@ -1,6 +1,6 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -31,10 +31,21 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/foodsCount", async (req, res) => {
+      const count = await foodCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
+
     app.get("/food/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await foodCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/foodRequest", async (req, res) => {
+      const cursor = foodRequestCollection.find();
+      const result = await cursor.toArray();
       res.send(result);
     });
 
@@ -53,9 +64,21 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/foodRequest", async (req, res) => {
-      const cursor = foodRequestCollection.find();
-      const result = await cursor.toArray();
+    app.put("/food/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedFood = req.body;
+      const food = {
+        $set: {
+          name: updatedFood.name,
+          image: updatedFood.image,
+          location: updatedFood.location,
+          time: updatedFood.time,
+          notes: updatedFood.notes,
+        },
+      };
+      const result = await foodCollection.updateOne(filter, food, options);
       res.send(result);
     });
 
@@ -78,11 +101,6 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await foodRequestCollection.deleteOne(query);
       res.send(result);
-    });
-
-    app.get("/foodsCount", async (req, res) => {
-      const count = await foodCollection.estimatedDocumentCount();
-      res.send({ count });
     });
 
     // await client.db("admin").command({ ping: 1 });
