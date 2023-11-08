@@ -74,7 +74,9 @@ async function run() {
     app.post("/logout", async (req, res) => {
       const user = req.body;
       console.log("logging out", user);
-      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+      res
+        .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
+        .send({ success: true });
     });
 
     app.get("/foods", async (req, res) => {
@@ -83,20 +85,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/foodsCount", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
-
+    app.get("/foodsCount", async (req, res) => {
       const count = await foodCollection.estimatedDocumentCount();
       res.send({ count });
     });
 
-    app.get("/food/:id", logger, verifyToken, async (req, res) => {
+    app.get("/food/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await foodCollection.findOne(query);
@@ -121,42 +115,26 @@ async function run() {
       if (req.user.email !== req.query.email) {
         return res.status(403).send({ message: "forbidden access" });
       }
-      let queryEmail = {};
+      let query = {};
       if (req.query.email) {
-        queryEmail = { email: req.query.email };
+        query = { email: req.query.email };
       }
 
       const id = req.params.id;
       console.log(id);
-      const query = { _id: new ObjectId(id) };
-      const result = await foodRequestCollection.findOne(query);
+      const queryId = { _id: new ObjectId(id) };
+      const result = await foodRequestCollection.findOne(queryId);
       res.send(result);
     });
 
-    app.post("/foods", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
-
+    app.post("/foods", async (req, res) => {
       const newFood = req.body;
       console.log(newFood);
       const result = await foodCollection.insertOne(newFood);
       res.send(result);
     });
 
-    app.put("/food/:id", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
-
+    app.put("/food/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
@@ -174,48 +152,41 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/foodRequest", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
+    app.put("/foodRequest/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedFoodStatus = req.body;
+      const food = {
+        $set: {
+          status: updatedFoodStatus.status,
+        },
+      };
+      const result = await foodRequestCollection.updateOne(
+        filter,
+        food,
+        options
+      );
+      res.send(result);
+    });
 
+    app.post("/foodRequest", async (req, res) => {
       const requestFood = req.body;
-      console.log(requestFood);
       const result = await foodRequestCollection.insertOne(requestFood);
       res.send(result);
     });
 
-    app.delete("/foods/:id", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let queryEmail = {};
-      if (req.query?.email) {
-        queryEmail = { email: req.query.email };
-      }
-
+    app.delete("/foods/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await foodCollection.deleteOne(query);
+      const queryId = { _id: new ObjectId(id) };
+      const result = await foodCollection.deleteOne(queryId);
       res.send(result);
     });
 
-    app.delete("/foodRequest/:id", logger, verifyToken, async (req, res) => {
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let queryEmail = {};
-      if (req.query?.email) {
-        queryEmail = { email: req.query.email };
-      }
-
+    app.delete("/foodRequest/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await foodRequestCollection.deleteOne(query);
+      const queryId = { _id: new ObjectId(id) };
+      const result = await foodRequestCollection.deleteOne(queryId);
       res.send(result);
     });
 
